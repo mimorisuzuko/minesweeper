@@ -6,13 +6,24 @@ class World {
 
 	/**
 	 * Create minesweeper world.
-	 * @param {Element} $element
 	 */
-	constructor($element) {
-		const height = 10;
-		const width = 10;
-		const minesLength = 10;
+	constructor() {
+		const $element = document.querySelector('.world-field');
 
+		this.cels = [];
+		this.$element = $element;
+		this.dc = new DifficultyController(this);
+
+		this.update();
+	}
+
+	/**
+	 * Update minesweeper world by resizing and relocation mines.
+	 */
+	update() {
+		this.$element.innerText = '';
+
+		const {height, width, minesLength, $element} = this;
 		const mines = _.slice(_.shuffle(_.map(Array(height * width), (a, i) => i)), 0, minesLength);
 
 		const cels = [];
@@ -29,8 +40,6 @@ class World {
 		}
 
 		this.cels = cels;
-		this.width = width;
-		this.height = height;
 	}
 
 	/**
@@ -61,6 +70,18 @@ class World {
 				this.chain(i);
 			}
 		});
+	}
+
+	get width() {
+		return this.dc.width;
+	}
+
+	get height() {
+		return this.dc.height;
+	}
+
+	get minesLength() {
+		return this.dc.minesLength;
 	}
 }
 
@@ -177,4 +198,53 @@ class Cel {
 	}
 }
 
-new World(document.querySelector('.world-field'));
+class DifficultyController {
+
+	/**
+	 * Controll minesweeper difficulty.
+	 * @param {World} world
+	 */
+	constructor(world) {
+		const $element = document.querySelector('.difficulty-controller');
+		const keys = ['width', 'height', 'minesLength'];
+		const $inputs = _.map($element.querySelectorAll('input[type="number"]'), ($a, i) => {
+			$a.addEventListener('change', () => {
+				this[keys[i]] = event.currentTarget.value;
+				this.world.update();
+			});
+			return $a;
+		});
+
+		this.world = world;
+		this.$inputs = $inputs;
+		this._width = $inputs[0].value;
+		this._height = $inputs[1].value;
+		this._minesLength = $inputs[2].value;
+	}
+
+	get width() {
+		return this._width;
+	}
+
+	set width(width) {
+		this.$inputs[0].value = this._width = width;
+	}
+
+	get height() {
+		return this._height;
+	}
+
+	set height(height) {
+		this.$inputs[1].value = this._height = height;
+	}
+
+	get minesLength() {
+		return this._minesLength;
+	}
+
+	set minesLength(minesLength) {
+		this.$inputs[2].value = this._minesLength = minesLength;
+	}
+}
+
+new World();

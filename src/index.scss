@@ -1,16 +1,57 @@
+$blue: rgb(0, 117, 211);
+
 body {
 	font-family: 'Roboto', sans-serif;
 }
 
+.clear {
+	&::after {
+		clear: both;
+		content: '.';
+		font-size: 0;
+		display: block;
+		height: 0;
+	}
+}
+
+nav {
+	ul {
+		@extend .clear;
+
+		list-style: none;
+		padding: 0;
+
+		li {
+			float: left;
+
+			&:not(:first-child) {
+				margin-left: 5px;
+			}
+		}
+	}
+}
+
+.input-field {
+	background-color: $blue;
+	padding: 5px 10px;
+
+	label {
+		color: white;
+		font-weight: 900;
+		margin-right: 10px;
+	}
+
+	input {
+		border-radius: 4px;
+		border: none;
+		outline: none;
+		font-size: inherit;
+	}
+}
+
 .world-field {
 	.line {
-		&::after {
-			clear: both;
-			content: '.';
-			font-size: 0;
-			display: block;
-			height: 0;
-		}
+		@extend .clear;
 
 		.cel {
 			user-select: none;
