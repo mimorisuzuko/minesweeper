@@ -1,25 +1,26 @@
 doctype html
 html
 	head
+		title Minesweeper 2000 on Web
 		link(rel='stylesheet' href='https://fonts.googleapis.com/css?family=Roboto:400,900')
 		link(rel="stylesheet" href='https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css')
 		link(rel='stylesheet' href='index.css')
 	body
-		h1 Minesweeper
 		main
+			div.world-field
+		footer
 			nav
 				ul.difficulty-controller
 					li
 						div.input-field
 							label Width
-							input(type='number' value='10')
+							input(type='number' value='68')
 					li
 						div.input-field
 							label Height
-							input(type='number' value='10')
+							input(type='number' value='48')
 					li
 						div.input-field
 							label Mines
-							input(type='number' value='10')
-			div.world-field
+							input(type='number' value='777')
 		script(src='index.js')

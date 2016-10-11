@@ -1,7 +1,12 @@
 $blue: rgb(0, 117, 211);
 
 body {
+	margin: 0;
 	font-family: 'Roboto', sans-serif;
+}
+
+main {
+	box-sizing: border-box;
 }
 
 .clear {
@@ -20,6 +25,7 @@ nav {
 
 		list-style: none;
 		padding: 0;
+		margin: 0;
 
 		li {
 			float: left;
@@ -55,8 +61,8 @@ nav {
 
 		.cel {
 			user-select: none;
-			width: 36px;
-			height: 36px;
+			width: 18px;
+			height: 18px;
 			float: left;
 			box-sizing: border-box;
 			background-color: silver;
@@ -66,15 +72,11 @@ nav {
 
 			&:not(.open) {
 				cursor: pointer;
-				border: 5px outset silver;
+				border: 3px outset silver;
 			}
 
 			.value {
 				font-weight: 900;
-			}
-
-			.fa-flag {
-				color: red;
 			}
 
 			&.no-flag {

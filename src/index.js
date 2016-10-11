@@ -10,6 +10,7 @@ class World {
 	constructor() {
 		const $element = document.querySelector('.world-field');
 
+		this.isFirst = false;
 		this.cels = [];
 		this.$element = $element;
 		this.dc = new DifficultyController(this);
@@ -18,14 +19,12 @@ class World {
 	}
 
 	/**
-	 * Update minesweeper world by resizing and relocation mines.
+	 * Update minesweeper world by resizing.
 	 */
 	update() {
 		this.$element.innerText = '';
 
-		const {height, width, minesLength, $element} = this;
-		const mines = _.slice(_.shuffle(_.map(Array(height * width), (a, i) => i)), 0, minesLength);
-
+		const {height, width, $element} = this;
 		const cels = [];
 		for (let i = 0; i < height; i += 1) {
 			const $line = document.createElement('div');
@@ -33,13 +32,27 @@ class World {
 			$element.appendChild($line);
 			for (let j = 0; j < width; j += 1) {
 				const index = j + i * width;
-				const cel = new Cel(this, $line, _.includes(mines, index), index);
+				const cel = new Cel(this, $line, index);
 				$line.appendChild(cel.$element);
 				cels.push(cel);
 			}
 		}
 
 		this.cels = cels;
+	}
+
+	/**
+	 * When first sweeping, Set mines.
+	 * @param {Number} index
+	 */
+	setMines(index) {
+		this.isFirst = true;
+		const {width, height, minesLength} = this;
+		const mines = _.pull(_.shuffle(_.map(Array(height * width), (a, i) => i)), index);
+		for (let i = 0; i < minesLength; i += 1) {
+			const index = mines[i];
+			this.cels[index].hasMine = true;
+		}
 	}
 
 	/**
@@ -91,10 +104,9 @@ class Cel {
 	 * Create mainsweeper cel.
 	 * @param {World} world
 	 * @param {Element} $parent
-	 * @param {Boolean} hasMine
 	 * @param {Number} index
 	 */
-	constructor(world, $parent, hasMine, index) {
+	constructor(world, $parent, index) {
 		const $element = document.createElement('div');
 		$element.classList.add('cel', 'no-flag', 'no-mine');
 		const $value = document.createElement('div');
@@ -106,7 +118,7 @@ class Cel {
 		this.$value = $value;
 		this.world = world;
 		this.$element = $element;
-		this.hasMine = hasMine;
+		this.hasMine = false;
 		this.index = index;
 		this.hasFlag = false;
 		this.hasSweeped = false;
@@ -135,9 +147,15 @@ class Cel {
 		if (button === 2) {
 			this.hasFlag = !$target.classList.toggle('no-flag');
 		} else if (button === 0) {
+			if (!this.world.isFirst) {
+				this.world.setMines(this.index);
+			}
 			this.sweeped();
 			if (this.hasMine) {
-				alert('YO!');
+				alert('BOOM!!!!');
+				setTimeout(() => {
+					this.world.update();
+				}, 500);
 			} else if (this.searchMines() === 0) {
 				this.world.chain(this.index);
 			}
@@ -158,9 +176,9 @@ class Cel {
 		], ([dx, dy]) => {
 			const i = this.world.dindex(index, dx, dy);
 			const cel = this.world.cels[i];
-			if (!cel) { return; }
-			if (cel.hasMine) {
+			if (cel && cel.hasMine) {
 				sum += 1;
+				console.log(i);
 			}
 		});
 
