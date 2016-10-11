@@ -10,7 +10,7 @@ class World {
 	constructor() {
 		const $element = document.querySelector('.world-field');
 
-		this.isFirst = false;
+		this.isFirst = true;
 		this.cels = [];
 		this.$element = $element;
 		this.dc = new DifficultyController(this);
@@ -23,6 +23,7 @@ class World {
 	 */
 	update() {
 		this.$element.innerText = '';
+		this.isFirst = true;
 
 		const {height, width, $element} = this;
 		const cels = [];
@@ -46,7 +47,7 @@ class World {
 	 * @param {Number} index
 	 */
 	setMines(index) {
-		this.isFirst = true;
+		this.isFirst = false;
 		const {width, height, minesLength} = this;
 		const mines = _.pull(_.shuffle(_.map(Array(height * width), (a, i) => i)), index);
 		for (let i = 0; i < minesLength; i += 1) {
@@ -147,7 +148,7 @@ class Cel {
 		if (button === 2) {
 			this.hasFlag = !$target.classList.toggle('no-flag');
 		} else if (button === 0) {
-			if (!this.world.isFirst) {
+			if (this.world.isFirst) {
 				this.world.setMines(this.index);
 			}
 			this.sweeped();
