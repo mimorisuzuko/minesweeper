@@ -1,3 +1,6 @@
+body {
+  font-family: 'Roboto', sans-serif; }
+
 .world-field .line::after {
   clear: both;
   content: '.';
@@ -10,11 +13,11 @@
      -moz-user-select: none;
       -ms-user-select: none;
           user-select: none;
-  width: 24px;
-  height: 24px;
+  width: 36px;
+  height: 36px;
   float: left;
   box-sizing: border-box;
-  background-color: gray;
+  background-color: silver;
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -26,4 +29,12 @@
           align-items: center; }
   .world-field .line .cel:not(.open) {
     cursor: pointer;
-    border: 5px outset gray; }
+    border: 5px outset silver; }
+  .world-field .line .cel .value {
+    font-weight: 900; }
+  .world-field .line .cel .fa-flag {
+    color: red; }
+  .world-field .line .cel.no-flag .fa-flag {
+    display: none; }
+  .world-field .line .cel.no-mine .fa-star {
+    display: none; }

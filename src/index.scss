@@ -1,3 +1,7 @@
+body {
+	font-family: 'Roboto', sans-serif;
+}
+
 .world-field {
 	.line {
 		&::after {
@@ -10,18 +14,38 @@
 
 		.cel {
 			user-select: none;
-			width: 24px;
-			height: 24px;
+			width: 36px;
+			height: 36px;
 			float: left;
 			box-sizing: border-box;
-			background-color: gray;
+			background-color: silver;
 			display: flex;
 			justify-content: center;
 			align-items: center;
 
 			&:not(.open) {
 				cursor: pointer;
-				border: 5px outset gray;
+				border: 5px outset silver;
+			}
+
+			.value {
+				font-weight: 900;
+			}
+
+			.fa-flag {
+				color: red;
+			}
+
+			&.no-flag {
+				.fa-flag {
+					display: none;
+				}
+			}
+
+			&.no-mine {
+				.fa-star {
+					display: none;
+				}
 			}
 		}
 	}

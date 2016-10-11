@@ -55,23 +55,12 @@ class World {
 		], ([dx, dy]) => {
 			const i = this.dindex(index, dx, dy);
 			const col = this.cels[i];
-			if (!col || col.hasMine || col.hasSweeped) { return; }
+			if (!col || col.hasMine || col.hasSweeped || col.hasFlag) { return; }
 			col.sweeped();
 			if (col.searchMines() === 0) {
 				this.chain(i);
 			}
 		});
-	}
-
-	/**
-	 * Create mine element.
-	 * @returns {Element}
-	 */
-	static createMineElement() {
-		const $i = document.createElement('i');
-		$i.setAttribute('aria-hidden', true);
-		$i.classList.add('fa', 'fa-star');
-		return $i;
 	}
 }
 
@@ -86,13 +75,19 @@ class Cel {
 	 */
 	constructor(world, $parent, hasMine, index) {
 		const $element = document.createElement('div');
-		$element.classList.add('cel');
-		$element.addEventListener('click', this.sweepedByClick.bind(this));
+		$element.classList.add('cel', 'no-flag', 'no-mine');
+		const $value = document.createElement('div');
+		$value.classList.add('value');
+		_.forEach([$value, Cel.createFlagElement(), Cel.createMineElement()], (a) => $element.appendChild(a));
+		$element.addEventListener('contextmenu', this.clickListener.bind(this));
+		$element.addEventListener('click', this.clickListener.bind(this));
 
+		this.$value = $value;
 		this.world = world;
 		this.$element = $element;
 		this.hasMine = hasMine;
 		this.index = index;
+		this.hasFlag = false;
 		this.hasSweeped = false;
 	}
 
@@ -102,20 +97,29 @@ class Cel {
 	sweeped() {
 		this.hasSweeped = true;
 		this.$element.classList.add('open');
+		if (this.hasMine) {
+			this.$element.classList.remove('no-mine');
+		}
 	}
 
 	/**
-	 * Click listener. Open cel.
+	 * Click listener.
 	 */
-	sweepedByClick() {
+	clickListener() {
+		event.preventDefault();
 		const $target = event.currentTarget;
-		if ($target.classList.contains('open')) { return; }
-		this.sweeped();
+		const {button} = event;
 
-		if (this.hasMine) {
-			$target.appendChild(World.createMineElement());
-		} else if (this.searchMines() === 0) {
-			this.world.chain(this.index);
+		if (this.hasSweeped) { return; }
+		if (button === 2) {
+			this.hasFlag = !$target.classList.toggle('no-flag');
+		} else if (button === 0) {
+			this.sweeped();
+			if (this.hasMine) {
+				alert('YO!');
+			} else if (this.searchMines() === 0) {
+				this.world.chain(this.index);
+			}
 		}
 	}
 
@@ -140,10 +144,36 @@ class Cel {
 		});
 
 		if (sum) {
-			this.$element.innerText = sum;
+			this.value = sum;
 		}
 
 		return sum;
+	}
+
+	set value(value) {
+		this.$value.innerText = value;
+	}
+
+	/**
+	 * Create a mine element.
+	 * @returns {Element}
+	 */
+	static createMineElement() {
+		const $i = document.createElement('i');
+		$i.setAttribute('aria-hidden', true);
+		$i.classList.add('fa', 'fa-star');
+		return $i;
+	}
+
+	/**
+	 * Create a flag element.
+	 * @returns {Element}
+	 */
+	static createFlagElement() {
+		const $i = document.createElement('i');
+		$i.setAttribute('aria-hidden', true);
+		$i.classList.add('fa', 'fa-flag');
+		return $i;
 	}
 }
 
