@@ -63,9 +63,10 @@ class World {
 			const x = xIndex + dx;
 			const y = yIndex + dy;
 			if (x === -1 || y === -1 || x === width || y === height) { return; }
-			const ncell = this.cells[y][x];
-			if (ncell.hasMine || ncell.hasSweeped || ncell.hasFlag) { return; }
-			if (ncell.searchMines() === 0) {
+			const cell = this.cells[y][x];
+			if (cell.hasMine || cell.hasSweeped || cell.hasFlag) { return; }
+			cell.sweeped();
+			if (cell.searchMines() === 0) {
 				this.chain(x, y);
 			}
 		});
