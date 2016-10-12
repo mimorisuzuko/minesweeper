@@ -5,7 +5,12 @@ body {
 main {
   box-sizing: border-box; }
 
-.clear::after, nav ul::after, .world-field .line::after {
+table {
+  border-collapse: collapse; }
+  table td {
+    padding: 0; }
+
+.clear::after, nav ul::after {
   clear: both;
   content: '.';
   font-size: 0;
@@ -34,14 +39,13 @@ nav ul {
     outline: none;
     font-size: inherit; }
 
-.world-field .line .cel {
+.world-field .cel {
   -webkit-user-select: none;
      -moz-user-select: none;
       -ms-user-select: none;
           user-select: none;
   width: 18px;
   height: 18px;
-  float: left;
   box-sizing: border-box;
   background-color: silver;
   display: -webkit-box;
@@ -52,13 +56,14 @@ nav ul {
           justify-content: center;
   -webkit-box-align: center;
       -ms-flex-align: center;
-          align-items: center; }
-  .world-field .line .cel:not(.open) {
+          align-items: center;
+  font-size: 0.8em; }
+  .world-field .cel:not(.open) {
     cursor: pointer;
     border: 3px outset silver; }
-  .world-field .line .cel .value {
+  .world-field .cel .value {
     font-weight: 900; }
-  .world-field .line .cel.no-flag .fa-flag {
+  .world-field .cel.no-flag .fa-flag {
     display: none; }
-  .world-field .line .cel.no-mine .fa-star {
+  .world-field .cel.no-mine .fa-star {
     display: none; }

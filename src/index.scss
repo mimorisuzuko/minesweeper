@@ -9,6 +9,14 @@ main {
 	box-sizing: border-box;
 }
 
+table {
+	border-collapse: collapse;
+
+	td {
+		padding: 0;
+	}
+}
+
 .clear {
 	&::after {
 		clear: both;
@@ -56,39 +64,35 @@ nav {
 }
 
 .world-field {
-	.line {
-		@extend .clear;
+	.cel {
+		user-select: none;
+		width: 18px;
+		height: 18px;
+		box-sizing: border-box;
+		background-color: silver;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		font-size: 0.8em;
 
-		.cel {
-			user-select: none;
-			width: 18px;
-			height: 18px;
-			float: left;
-			box-sizing: border-box;
-			background-color: silver;
-			display: flex;
-			justify-content: center;
-			align-items: center;
+		&:not(.open) {
+			cursor: pointer;
+			border: 3px outset silver;
+		}
 
-			&:not(.open) {
-				cursor: pointer;
-				border: 3px outset silver;
+		.value {
+			font-weight: 900;
+		}
+
+		&.no-flag {
+			.fa-flag {
+				display: none;
 			}
+		}
 
-			.value {
-				font-weight: 900;
-			}
-
-			&.no-flag {
-				.fa-flag {
-					display: none;
-				}
-			}
-
-			&.no-mine {
-				.fa-star {
-					display: none;
-				}
+		&.no-mine {
+			.fa-star {
+				display: none;
 			}
 		}
 	}

@@ -11,7 +11,7 @@ class World {
 		const $element = document.querySelector('.world-field');
 
 		this.isFirst = true;
-		this.cels = [];
+		this.cells = [];
 		this.$element = $element;
 		this.dc = new DifficultyController(this);
 
@@ -22,24 +22,19 @@ class World {
 	 * Update minesweeper world by resizing.
 	 */
 	update() {
-		this.$element.innerText = '';
-		this.isFirst = true;
-
 		const {height, width, $element} = this;
-		const cels = [];
+		this.isFirst = true;
+		$element.innerHTML = '';
+
 		for (let i = 0; i < height; i += 1) {
-			const $line = document.createElement('div');
-			$line.classList.add('line');
-			$element.appendChild($line);
+			const $tr = $element.insertRow(-1);
 			for (let j = 0; j < width; j += 1) {
 				const index = j + i * width;
-				const cel = new Cel(this, $line, index);
-				$line.appendChild(cel.$element);
-				cels.push(cel);
+				const $td = $tr.insertCell(-1);
+				const cell = new Cell(this, $td, index);
+				this.cells.push(cell);
 			}
 		}
-
-		this.cels = cels;
 	}
 
 	/**
@@ -52,7 +47,7 @@ class World {
 		const mines = _.pull(_.shuffle(_.map(Array(height * width), (a, i) => i)), index);
 		for (let i = 0; i < minesLength; i += 1) {
 			const index = mines[i];
-			this.cels[index].hasMine = true;
+			this.cells[index].hasMine = true;
 		}
 	}
 
@@ -77,7 +72,7 @@ class World {
 			[-1, 1], [0, 1], [1, 1]
 		], ([dx, dy]) => {
 			const i = this.dindex(index, dx, dy);
-			const col = this.cels[i];
+			const col = this.cells[i];
 			if (!col || col.hasMine || col.hasSweeped || col.hasFlag) { return; }
 			col.sweeped();
 			if (col.searchMines() === 0) {
@@ -99,10 +94,10 @@ class World {
 	}
 }
 
-class Cel {
+class Cell {
 
 	/**
-	 * Create mainsweeper cel.
+	 * Create mainsweeper cell.
 	 * @param {World} world
 	 * @param {Element} $parent
 	 * @param {Number} index
@@ -112,9 +107,10 @@ class Cel {
 		$element.classList.add('cel', 'no-flag', 'no-mine');
 		const $value = document.createElement('div');
 		$value.classList.add('value');
-		_.forEach([$value, Cel.createFlagElement(), Cel.createMineElement()], (a) => $element.appendChild(a));
+		_.forEach([$value, Cell.createFlagElement(), Cell.createMineElement()], (a) => $element.appendChild(a));
 		$element.addEventListener('contextmenu', this.clickListener.bind(this));
 		$element.addEventListener('click', this.clickListener.bind(this));
+		$parent.appendChild($element);
 
 		this.$value = $value;
 		this.world = world;
@@ -126,7 +122,7 @@ class Cel {
 	}
 
 	/**
-	 * Open cel.
+	 * Open cell.
 	 */
 	sweeped() {
 		this.hasSweeped = true;
@@ -176,7 +172,7 @@ class Cel {
 			[-1, 1], [0, 1], [1, 1]
 		], ([dx, dy]) => {
 			const i = this.world.dindex(index, dx, dy);
-			const cel = this.world.cels[i];
+			const cel = this.world.cells[i];
 			if (cel && cel.hasMine) {
 				sum += 1;
 				console.log(i);
