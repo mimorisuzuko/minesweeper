@@ -10,12 +10,115 @@ class World {
 	constructor() {
 		const $element = document.querySelector('.world-field');
 
+		this.xIndex = 0;
+		this.yIndex = 0;
 		this.isFirst = true;
 		this.cells = [];
 		this.$element = $element;
 		this.dc = new DifficultyController(this);
 
+		document.body.addEventListener('keydown', this.keydowner.bind(this));
+
 		this.update();
+	}
+
+	/**
+	 * Keydown listener
+	 */
+	keydowner() {
+		const k = event.keyCode;
+		if (k === 38) {
+			event.preventDefault();
+			this.move(0, -1);
+		} else if (k === 39) {
+			event.preventDefault();
+			this.move(1, 0);
+		} else if (k === 40) {
+			event.preventDefault();
+			this.move(0, 1);
+		} else if (k === 37) {
+			event.preventDefault();
+			this.move(-1, 0);
+		} else if (k === 90) {
+			event.preventDefault();
+			const {isFirst, cell} = this;
+			if (cell.hasSweeped) { return; }
+			if (isFirst) {
+				this.setMines();
+			}
+			if (!cell.hasFlag) {
+				cell.sweeped();
+				if (cell.hasMine) {
+					alert('BOOM!!!!');
+					setTimeout(() => {
+						this.update();
+					}, 500);
+				} else if (cell.searchMines() === 0) {
+					this.chain();
+				}
+			}
+		} else if (k === 88) {
+			event.preventDefault();
+			this.cell.toggleFlag();
+		} else if (k === 67) {
+			event.preventDefault();
+			const {cell, width, height} = this;
+			const {xIndex, yIndex, value} = cell;
+			const {aroundIndexArray} = Cell;
+			if (!cell.hasSweeped) { return; }
+			const flags = _.reduce(aroundIndexArray, (sum, [dx, dy]) => {
+				const x = xIndex + dx;
+				const y = yIndex + dy;
+				if (x === -1 || y === -1 || x === width || y === height) {
+					return sum;
+				}
+				return sum + (!this.cells[y][x].hasFlag ? 0 : 1);
+			}, 0);
+			if (flags === value) {
+				_.forEach(aroundIndexArray, ([dx, dy]) => {
+					const x = xIndex + dx;
+					const y = yIndex + dy;
+					if (x === -1 || y === -1 || x === width || y === height) { return; }
+					const cell = this.cells[y][x];
+					if (cell.hasFlag) { return; }
+					cell.sweeped();
+					if (cell.hasMine) {
+						alert('BOOM!!!!');
+						setTimeout(() => {
+							this.update();
+						}, 500);
+					} else if (cell.searchMines() === 0) {
+						this.chain();
+					}
+				});
+			}
+		}
+	}
+
+	/**
+	 * Move current cell.
+	 * @param {Number} dx
+	 * @param {Number} dy
+	 */
+	move(dx, dy) {
+		const {width, height} = this;
+
+		this.cells[this.yIndex][this.xIndex].$element.classList.remove('current');
+
+		this.xIndex += dx;
+		if (this.xIndex === width) {
+			this.xIndex = 0;
+		} else if (this.xIndex === -1) {
+			this.xIndex = width - 1;
+		}
+		this.yIndex += dy;
+		if (this.yIndex === height) {
+			this.yIndex = 0;
+		} else if (this.yIndex === -1) {
+			this.yIndex = height - 1;
+		}
+
+		this.cells[this.yIndex][this.xIndex].$element.classList.add('current');
 	}
 
 	/**
@@ -24,6 +127,8 @@ class World {
 	update() {
 		const {height, width, $element} = this;
 		this.isFirst = true;
+		this.xIndex = 0;
+		this.yIndex = 0;
 		$element.innerHTML = '';
 
 		this.cells = _.map(Array(height), (a, yIndex) => {
@@ -33,16 +138,16 @@ class World {
 				return new Cell(this, $td, xIndex, yIndex);
 			});
 		});
+
+		this.cells[this.yIndex][this.xIndex].$element.classList.add('current');
 	}
 
 	/**
 	 * When first sweeping, Set mines.
-	 * @param {Number} xIndex
-	 * @param {Number} yIndex
 	 */
-	setMines(xIndex, yIndex) {
+	setMines() {
 		this.isFirst = false;
-		const {width, height, minesLength} = this;
+		const {width, height, minesLength, xIndex, yIndex} = this;
 		const mines = _.pull(_.shuffle(_.map(Array(height * width), (a, i) => i)), xIndex + yIndex * width);
 		for (let i = 0; i < minesLength; i += 1) {
 			const index = mines[i];
@@ -57,7 +162,7 @@ class World {
 	 * @param {Number} xIndex
 	 * @param {Number} yIndex
 	 */
-	chain(xIndex, yIndex) {
+	chain(xIndex = this.xIndex, yIndex = this.yIndex) {
 		const {width, height} = this;
 		_.forEach(Cell.aroundIndexArray, ([dx, dy]) => {
 			const x = xIndex + dx;
@@ -70,6 +175,10 @@ class World {
 				this.chain(x, y);
 			}
 		});
+	}
+
+	get cell() {
+		return this.cells[this.yIndex][this.xIndex];
 	}
 
 	get width() {
@@ -100,10 +209,9 @@ class Cell {
 		const $value = document.createElement('div');
 		$value.classList.add('value');
 		_.forEach([$value, Cell.createFlagElement(), Cell.createMineElement()], (a) => $element.appendChild(a));
-		$element.addEventListener('contextmenu', this.clickListener.bind(this));
-		$element.addEventListener('click', this.clickListener.bind(this));
 		$parent.appendChild($element);
 
+		this._value = 0;
 		this.$value = $value;
 		this.world = world;
 		this.$element = $element;
@@ -115,43 +223,21 @@ class Cell {
 	}
 
 	/**
-	 * Open cell.
+	 * Toggle a flag.
+	 */
+	toggleFlag() {
+		if (this.hasSweeped) { return; }
+		this.hasFlag = !this.$element.classList.toggle('no-flag');
+	}
+
+	/**
+	 * Open a cell.
 	 */
 	sweeped() {
 		this.hasSweeped = true;
 		this.$element.classList.add('open');
 		if (this.hasMine) {
 			this.$element.classList.remove('no-mine');
-		}
-	}
-
-	/**
-	 * Click listener.
-	 */
-	clickListener() {
-		event.preventDefault();
-		const $target = event.currentTarget;
-		const {button} = event;
-		const {xIndex, yIndex} = this;
-
-		if (this.hasSweeped) { return; }
-		if (button === 2) {
-			this.hasFlag = !$target.classList.toggle('no-flag');
-		} else if (button === 0) {
-			if (this.world.isFirst) {
-				this.world.setMines(xIndex, yIndex);
-			}
-			if (!this.hasFlag) {
-				this.sweeped();
-				if (this.hasMine) {
-					alert('BOOM!!!!');
-					setTimeout(() => {
-						this.world.update();
-					}, 500);
-				} else if (this.searchMines() === 0) {
-					this.world.chain(xIndex, yIndex);
-				}
-			}
 		}
 	}
 
@@ -179,7 +265,12 @@ class Cell {
 		return sum;
 	}
 
+	get value() {
+		return this._value;
+	}
+
 	set value(value) {
+		this._value = value;
 		this.$value.innerText = value;
 	}
 

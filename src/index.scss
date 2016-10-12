@@ -73,6 +73,11 @@ nav {
 		justify-content: center;
 		align-items: center;
 		font-size: 0.8em;
+		border: 1px solid transparent;
+
+		&.current {
+			border-color: $blue !important;
+		}
 
 		&:not(.open) {
 			cursor: pointer;
