@@ -40,12 +40,8 @@ nav ul {
     font-size: inherit; }
 
 .world-field .cel {
-  -webkit-user-select: none;
-     -moz-user-select: none;
-      -ms-user-select: none;
-          user-select: none;
-  width: 18px;
-  height: 18px;
+  width: 15px;
+  height: 15px;
   box-sizing: border-box;
   background-color: silver;
   display: -webkit-box;
@@ -60,10 +56,14 @@ nav ul {
   font-size: 0.8em; }
   .world-field .cel:not(.open) {
     cursor: pointer;
-    border: 3px outset silver; }
+    border: 2px outset silver; }
   .world-field .cel .value {
-    font-weight: 900; }
-  .world-field .cel.no-flag .fa-flag {
+    font-weight: 900;
+    -webkit-user-select: none;
+       -moz-user-select: none;
+        -ms-user-select: none;
+            user-select: none; }
+  .world-field .cel.no-flag .flag {
     display: none; }
-  .world-field .cel.no-mine .fa-star {
+  .world-field .cel.no-mine .mine {
     display: none; }

@@ -65,9 +65,8 @@ nav {
 
 .world-field {
 	.cel {
-		user-select: none;
-		width: 18px;
-		height: 18px;
+		width: 15px;
+		height: 15px;
 		box-sizing: border-box;
 		background-color: silver;
 		display: flex;
@@ -77,21 +76,22 @@ nav {
 
 		&:not(.open) {
 			cursor: pointer;
-			border: 3px outset silver;
+			border: 2px outset silver;
 		}
 
 		.value {
 			font-weight: 900;
+			user-select: none;
 		}
 
 		&.no-flag {
-			.fa-flag {
+			.flag {
 				display: none;
 			}
 		}
 
 		&.no-mine {
-			.fa-star {
+			.mine {
 				display: none;
 			}
 		}

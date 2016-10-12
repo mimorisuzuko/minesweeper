@@ -188,10 +188,10 @@ class Cell {
 	 * @returns {Element}
 	 */
 	static createMineElement() {
-		const $i = document.createElement('i');
-		$i.setAttribute('aria-hidden', true);
-		$i.classList.add('fa', 'fa-star');
-		return $i;
+		const $img = document.createElement('img');
+		$img.classList.add('mine');
+		$img.src = './images/mine.png';
+		return $img;
 	}
 
 	/**
@@ -199,10 +199,10 @@ class Cell {
 	 * @returns {Element}
 	 */
 	static createFlagElement() {
-		const $i = document.createElement('i');
-		$i.setAttribute('aria-hidden', true);
-		$i.classList.add('fa', 'fa-flag');
-		return $i;
+		const $img = document.createElement('img');
+		$img.classList.add('flag');
+		$img.src = './images/flag.png';
+		return $img;
 	}
 
 	static get aroundIndexArray() {
