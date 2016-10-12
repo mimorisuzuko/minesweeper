@@ -57,7 +57,7 @@ class World {
 	 * @param {Number} xIndex
 	 * @param {Number} yIndex
 	 */
-	chain(cell) {
+	chain(xIndex, yIndex) {
 		const {width, height} = this;
 		_.forEach(Cell.aroundIndexArray, ([dx, dy]) => {
 			const x = xIndex + dx;
