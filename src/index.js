@@ -141,14 +141,16 @@ class Cell {
 			if (this.world.isFirst) {
 				this.world.setMines(xIndex, yIndex);
 			}
-			this.sweeped();
-			if (this.hasMine) {
-				alert('BOOM!!!!');
-				setTimeout(() => {
-					this.world.update();
-				}, 500);
-			} else if (this.searchMines() === 0) {
-				this.world.chain(xIndex, yIndex);
+			if (!this.hasFlag) {
+				this.sweeped();
+				if (this.hasMine) {
+					alert('BOOM!!!!');
+					setTimeout(() => {
+						this.world.update();
+					}, 500);
+				} else if (this.searchMines() === 0) {
+					this.world.chain(xIndex, yIndex);
+				}
 			}
 		}
 	}
