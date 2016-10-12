@@ -26,57 +26,47 @@ class World {
 		this.isFirst = true;
 		$element.innerHTML = '';
 
-		for (let i = 0; i < height; i += 1) {
+		this.cells = _.map(Array(height), (a, yIndex) => {
 			const $tr = $element.insertRow(-1);
-			for (let j = 0; j < width; j += 1) {
-				const index = j + i * width;
+			return _.map(Array(width), (b, xIndex) => {
 				const $td = $tr.insertCell(-1);
-				const cell = new Cell(this, $td, index);
-				this.cells.push(cell);
-			}
-		}
+				return new Cell(this, $td, xIndex, yIndex);
+			});
+		});
 	}
 
 	/**
 	 * When first sweeping, Set mines.
-	 * @param {Number} index
+	 * @param {Number} xIndex
+	 * @param {Number} yIndex
 	 */
-	setMines(index) {
+	setMines(xIndex, yIndex) {
 		this.isFirst = false;
 		const {width, height, minesLength} = this;
-		const mines = _.pull(_.shuffle(_.map(Array(height * width), (a, i) => i)), index);
+		const mines = _.pull(_.shuffle(_.map(Array(height * width), (a, i) => i)), xIndex + yIndex * width);
 		for (let i = 0; i < minesLength; i += 1) {
 			const index = mines[i];
-			this.cells[index].hasMine = true;
+			const x = index % width;
+			const y = Math.floor(index / width);
+			this.cells[y][x].hasMine = true;
 		}
 	}
 
 	/**
-	 * Calculate index.
-	 * @param {Number} index
-	 * @param {Number} dx
-	 * @param {Number} dy
-	 */
-	dindex(index, dx, dy) {
-		return index + dx + dy * this.width;
-	}
-
-	/**
 	 * Search around mines.
-	 * @param {Number} index
+	 * @param {Number} xIndex
+	 * @param {Number} yIndex
 	 */
-	chain(index) {
-		_.forEach([
-			[-1, -1], [0, -1], [1, -1],
-			[-1, 0], [1, 0],
-			[-1, 1], [0, 1], [1, 1]
-		], ([dx, dy]) => {
-			const i = this.dindex(index, dx, dy);
-			const col = this.cells[i];
-			if (!col || col.hasMine || col.hasSweeped || col.hasFlag) { return; }
-			col.sweeped();
-			if (col.searchMines() === 0) {
-				this.chain(i);
+	chain(cell) {
+		const {width, height} = this;
+		_.forEach(Cell.aroundIndexArray, ([dx, dy]) => {
+			const x = xIndex + dx;
+			const y = yIndex + dy;
+			if (x === -1 || y === -1 || x === width || y === height) { return; }
+			const ncell = this.cells[y][x];
+			if (ncell.hasMine || ncell.hasSweeped || ncell.hasFlag) { return; }
+			if (ncell.searchMines() === 0) {
+				this.chain(x, y);
 			}
 		});
 	}
@@ -100,9 +90,10 @@ class Cell {
 	 * Create mainsweeper cell.
 	 * @param {World} world
 	 * @param {Element} $parent
-	 * @param {Number} index
+	 * @param {Number} xIndex
+	 * @param {Number} yIndex
 	 */
-	constructor(world, $parent, index) {
+	constructor(world, $parent, xIndex, yIndex) {
 		const $element = document.createElement('div');
 		$element.classList.add('cel', 'no-flag', 'no-mine');
 		const $value = document.createElement('div');
@@ -116,7 +107,8 @@ class Cell {
 		this.world = world;
 		this.$element = $element;
 		this.hasMine = false;
-		this.index = index;
+		this.xIndex = xIndex;
+		this.yIndex = yIndex;
 		this.hasFlag = false;
 		this.hasSweeped = false;
 	}
@@ -139,13 +131,14 @@ class Cell {
 		event.preventDefault();
 		const $target = event.currentTarget;
 		const {button} = event;
+		const {xIndex, yIndex} = this;
 
 		if (this.hasSweeped) { return; }
 		if (button === 2) {
 			this.hasFlag = !$target.classList.toggle('no-flag');
 		} else if (button === 0) {
 			if (this.world.isFirst) {
-				this.world.setMines(this.index);
+				this.world.setMines(xIndex, yIndex);
 			}
 			this.sweeped();
 			if (this.hasMine) {
@@ -154,7 +147,7 @@ class Cell {
 					this.world.update();
 				}, 500);
 			} else if (this.searchMines() === 0) {
-				this.world.chain(this.index);
+				this.world.chain(xIndex, yIndex);
 			}
 		}
 	}
@@ -164,18 +157,15 @@ class Cell {
 	 * @returns {Number}
 	 */
 	searchMines() {
-		const {index} = this;
+		const {xIndex, yIndex, world} = this;
+		const {width, height} = world;
 		let sum = 0;
-		_.forEach([
-			[-1, -1], [0, -1], [1, -1],
-			[-1, 0], [1, 0],
-			[-1, 1], [0, 1], [1, 1]
-		], ([dx, dy]) => {
-			const i = this.world.dindex(index, dx, dy);
-			const cel = this.world.cells[i];
-			if (cel && cel.hasMine) {
+		_.forEach(Cell.aroundIndexArray, ([dx, dy]) => {
+			const x = xIndex + dx;
+			const y = yIndex + dy;
+			if (x === -1 || y === -1 || x === width || y === height) { return; }
+			if (this.world.cells[y][x].hasMine) {
 				sum += 1;
-				console.log(i);
 			}
 		});
 
@@ -211,6 +201,14 @@ class Cell {
 		$i.classList.add('fa', 'fa-flag');
 		return $i;
 	}
+
+	static get aroundIndexArray() {
+		return [
+			[-1, -1], [0, -1], [1, -1],
+			[-1, 0], [1, 0],
+			[-1, 1], [0, 1], [1, 1]
+		];
+	}
 }
 
 class DifficultyController {
@@ -232,9 +230,9 @@ class DifficultyController {
 
 		this.world = world;
 		this.$inputs = $inputs;
-		this._width = $inputs[0].value;
-		this._height = $inputs[1].value;
-		this._minesLength = $inputs[2].value;
+		this._width = parseInt($inputs[0].value, 10);
+		this._height = parseInt($inputs[1].value, 10);
+		this._minesLength = parseInt($inputs[2].value, 10);
 	}
 
 	get width() {
