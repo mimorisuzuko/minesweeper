@@ -88,7 +88,7 @@ class World {
 							this.update();
 						}, 500);
 					} else if (cell.searchMines() === 0) {
-						this.chain();
+						this.chain(x, y);
 					}
 				});
 			}
@@ -185,12 +185,24 @@ class World {
 		return this.dc.width;
 	}
 
+	set width(width) {
+		this.dc.width = width;
+	}
+
 	get height() {
 		return this.dc.height;
 	}
 
+	set height(height) {
+		this.dc.height = height;
+	}
+
 	get minesLength() {
 		return this.dc.minesLength;
+	}
+
+	set minesLength(minesLength) {
+		this.dc.minesLength = minesLength;
 	}
 }
 
