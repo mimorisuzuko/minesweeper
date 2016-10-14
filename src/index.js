@@ -23,6 +23,34 @@ class World {
 	}
 
 	/**
+	 * Sweep a mine.
+	 * @param {Cell} cell
+	 */
+	sweep(cell) {
+		if (!cell || cell.hasFlag || cell.hasSweeped) { return; }
+
+		// set mines to the world
+		if (this.isFirst) {
+			this.setMines();
+		}
+
+		if (cell.sweeped()) {
+			const length = cell.aroundMinesLength();
+			if (length) {
+				cell.value = length;
+			} else {
+				this.chain(cell.xIndex, cell.yIndex);
+			}
+		} else {
+			// Restart the world
+			alert('BOOM!!!!');
+			setTimeout(() => {
+				this.update();
+			}, 300);
+		}
+	}
+
+	/**
 	 * Keydown listener
 	 */
 	keydowner() {
@@ -41,55 +69,20 @@ class World {
 			this.move(-1, 0);
 		} else if (k === 90) {
 			event.preventDefault();
-			const {isFirst, cell} = this;
-			if (cell.hasSweeped) { return; }
-			if (isFirst) {
-				this.setMines();
-			}
-			if (!cell.hasFlag) {
-				cell.sweeped();
-				if (cell.hasMine) {
-					alert('BOOM!!!!');
-					setTimeout(() => {
-						this.update();
-					}, 500);
-				} else if (cell.searchMines() === 0) {
-					this.chain();
-				}
-			}
+			this.sweep(this.cell());
 		} else if (k === 88) {
 			event.preventDefault();
-			this.cell.toggleFlag();
+			this.cell().toggleFlag();
 		} else if (k === 67) {
 			event.preventDefault();
-			const {cell, width, height} = this;
-			const {xIndex, yIndex, value} = cell;
-			const {aroundIndexArray} = Cell;
-			if (!cell.hasSweeped) { return; }
-			const flags = _.reduce(aroundIndexArray, (sum, [dx, dy]) => {
-				const x = xIndex + dx;
-				const y = yIndex + dy;
-				if (x === -1 || y === -1 || x === width || y === height) {
-					return sum;
-				}
-				return sum + (!this.cells[y][x].hasFlag ? 0 : 1);
-			}, 0);
-			if (flags === value) {
-				_.forEach(aroundIndexArray, ([dx, dy]) => {
+			const {width, height} = this;
+			const cell = this.cell();
+			const {xIndex, yIndex, value, hasSweeped} = cell;
+			if (cell.aroundFlagsLength() === value) {
+				_.forEach(Cell.aroundIndexArray, ([dx, dy]) => {
 					const x = xIndex + dx;
 					const y = yIndex + dy;
-					if (x === -1 || y === -1 || x === width || y === height) { return; }
-					const cell = this.cells[y][x];
-					if (cell.hasFlag) { return; }
-					cell.sweeped();
-					if (cell.hasMine) {
-						alert('BOOM!!!!');
-						setTimeout(() => {
-							this.update();
-						}, 500);
-					} else if (cell.searchMines() === 0) {
-						this.chain(x, y);
-					}
+					this.sweep(this.cell(x, y));
 				});
 			}
 		}
@@ -167,18 +160,29 @@ class World {
 		_.forEach(Cell.aroundIndexArray, ([dx, dy]) => {
 			const x = xIndex + dx;
 			const y = yIndex + dy;
-			if (x === -1 || y === -1 || x === width || y === height) { return; }
-			const cell = this.cells[y][x];
-			if (cell.hasMine || cell.hasSweeped || cell.hasFlag) { return; }
-			cell.sweeped();
-			if (cell.searchMines() === 0) {
-				this.chain(x, y);
-			}
+			this.sweep(this.cell(x, y));
 		});
 	}
 
-	get cell() {
-		return this.cells[this.yIndex][this.xIndex];
+	/**
+	 * Whether xIndex and yIndex is in thw World, or not.
+	 * @param {Number} xIndex
+	 * @param {Number} yIndex
+	 * @returns {Boolean}
+	 */
+	contains(xIndex, yIndex) {
+		const {width, height} = this;
+		return -1 < xIndex && xIndex < width && -1 < yIndex && yIndex < height;
+	}
+
+	/**
+	 * Get the cell that is named by index.
+	 * @param {Number} xIndex
+	 * @param {Number} yIndex
+	 * @returns {Cell}
+	 */
+	cell(xIndex = this.xIndex, yIndex = this.yIndex) {
+		return this.contains(xIndex, yIndex) ? this.cells[yIndex][xIndex] : null;
 	}
 
 	get width() {
@@ -244,6 +248,7 @@ class Cell {
 
 	/**
 	 * Open a cell.
+	 * @returns {Boolean}
 	 */
 	sweeped() {
 		this.hasSweeped = true;
@@ -251,30 +256,43 @@ class Cell {
 		if (this.hasMine) {
 			this.$element.classList.remove('no-mine');
 		}
+		return !this.hasMine;
 	}
 
 	/**
-	 * Search around mines.
+	 * Return around flags length.
 	 * @returns {Number}
 	 */
-	searchMines() {
+	aroundMinesLength() {
 		const {xIndex, yIndex, world} = this;
-		const {width, height} = world;
-		let sum = 0;
-		_.forEach(Cell.aroundIndexArray, ([dx, dy]) => {
+		const {width, height, cells} = world;
+		return _.reduce(Cell.aroundIndexArray, (a, [dx, dy]) => {
 			const x = xIndex + dx;
 			const y = yIndex + dy;
-			if (x === -1 || y === -1 || x === width || y === height) { return; }
-			if (this.world.cells[y][x].hasMine) {
-				sum += 1;
+			if (!world.contains(x, y)) {
+				return a;
 			}
-		});
+			const cell = cells[y][x];
+			return cell.hasMine ? a + 1 : a;
+		}, 0);
+	}
 
-		if (sum) {
-			this.value = sum;
-		}
-
-		return sum;
+	/**
+	 * Return around flags length.
+	 * @returns {Number}
+	 */
+	aroundFlagsLength() {
+		const {xIndex, yIndex, world} = this;
+		const {width, height, cells} = world;
+		return _.reduce(Cell.aroundIndexArray, (sum, [dx, dy]) => {
+			const x = xIndex + dx;
+			const y = yIndex + dy;
+			if (!world.contains(x, y)) {
+				return sum;
+			}
+			const cell = cells[y][x];
+			return cell.hasFlag ? sum + 1 : sum;
+		}, 0);
 	}
 
 	get value() {
