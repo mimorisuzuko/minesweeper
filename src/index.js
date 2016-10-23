@@ -10,11 +10,13 @@ class World {
 	constructor() {
 		const $element = document.querySelector('.world-field');
 
+		this.sweepingCount = 0;
 		this.xIndex = 0;
 		this.yIndex = 0;
 		this.isFirst = true;
 		this.cells = [];
 		this.$element = $element;
+		this.size = 0;
 		this.dc = new DifficultyController(this);
 
 		document.body.addEventListener('keydown', this.keydowner.bind(this));
@@ -41,6 +43,18 @@ class World {
 			} else {
 				this.chain(cell.xIndex, cell.yIndex);
 			}
+
+			this.sweepingCount += 1;
+			const rate = (this.sweepingCount + this.minesLength) / this.size;
+			this.rate = rate;
+
+			if (rate === 1) {
+				alert('CLEAR!!!!');
+				setTimeout(() => {
+					this.update();
+				}, 300);
+			}
+
 		} else {
 			// Restart the world
 			alert('BOOM!!!!');
@@ -77,7 +91,8 @@ class World {
 			event.preventDefault();
 			const {width, height} = this;
 			const cell = this.cell();
-			const {xIndex, yIndex, value, hasSweeped} = cell;
+			const {xIndex, yIndex, value, hasFlag, hasSweeped} = cell;
+			if (!hasSweeped || hasFlag) { return; }
 			if (cell.aroundFlagsLength() === value) {
 				_.forEach(Cell.aroundIndexArray, ([dx, dy]) => {
 					const x = xIndex + dx;
@@ -118,10 +133,15 @@ class World {
 	 * Update minesweeper world by resizing.
 	 */
 	update() {
-		const {height, width, $element} = this;
+		const {height, width, $element, minesLength} = this;
+		const size = width * height;
+
 		this.isFirst = true;
 		this.xIndex = 0;
 		this.yIndex = 0;
+		this.size = size;
+		this.rate = 0;
+		this.sweepingCount = 0;
 		$element.innerHTML = '';
 
 		this.cells = _.map(Array(height), (a, yIndex) => {
@@ -207,6 +227,10 @@ class World {
 
 	set minesLength(minesLength) {
 		this.dc.minesLength = minesLength;
+	}
+
+	set rate(rate) {
+		this.dc.rate = rate.toFixed(2);
 	}
 }
 
@@ -344,7 +368,7 @@ class DifficultyController {
 	constructor(world) {
 		const $element = document.querySelector('.difficulty-controller');
 		const keys = ['width', 'height', 'minesLength'];
-		const $inputs = _.map($element.querySelectorAll('input[type="number"]'), ($a, i) => {
+		const $inputs = _.map($element.querySelectorAll('input'), ($a, i) => {
 			$a.addEventListener('change', () => {
 				this[keys[i]] = event.currentTarget.value;
 				this.world.update();
@@ -357,6 +381,7 @@ class DifficultyController {
 		this._width = parseInt($inputs[0].value, 10);
 		this._height = parseInt($inputs[1].value, 10);
 		this._minesLength = parseInt($inputs[2].value, 10);
+		this._rate = $inputs[3];
 	}
 
 	get width() {
@@ -364,7 +389,7 @@ class DifficultyController {
 	}
 
 	set width(width) {
-		this.$inputs[0].value = this._width = width;
+		this.$inputs[0].value = this._width = _.parseInt(width, 10);
 	}
 
 	get height() {
@@ -372,7 +397,7 @@ class DifficultyController {
 	}
 
 	set height(height) {
-		this.$inputs[1].value = this._height = height;
+		this.$inputs[1].value = this._height = _.parseInt(height, 10);
 	}
 
 	get minesLength() {
@@ -380,7 +405,15 @@ class DifficultyController {
 	}
 
 	set minesLength(minesLength) {
-		this.$inputs[2].value = this._minesLength = minesLength;
+		this.$inputs[2].value = this._minesLength = _.parseInt(minesLength, 10);
+	}
+
+	get rate() {
+		return this._rate;
+	}
+
+	set rate(rate) {
+		this.$inputs[3].value = this._rate = rate;
 	}
 }
 
