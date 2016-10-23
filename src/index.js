@@ -11,12 +11,12 @@ class World {
 		const $element = document.querySelector('.world-field');
 
 		this.sweepingCount = 0;
+		this.sweepableCount = 0;
 		this.xIndex = 0;
 		this.yIndex = 0;
 		this.isFirst = true;
 		this.cells = [];
 		this.$element = $element;
-		this.size = 0;
 		this.dc = new DifficultyController(this);
 
 		document.body.addEventListener('keydown', this.keydowner.bind(this));
@@ -45,7 +45,7 @@ class World {
 			}
 
 			this.sweepingCount += 1;
-			const rate = (this.sweepingCount + this.minesLength) / this.size;
+			const rate = this.sweepingCount / this.sweepableCount;
 			this.rate = rate;
 
 			if (rate === 1) {
@@ -134,13 +134,14 @@ class World {
 	 */
 	update() {
 		const {height, width, $element, minesLength} = this;
-		const size = width * height;
+		const count = width * height - minesLength;
 
 		this.isFirst = true;
 		this.xIndex = 0;
 		this.yIndex = 0;
-		this.size = size;
+		this.size = count;
 		this.rate = 0;
+		this.sweepableCount = count;
 		this.sweepingCount = 0;
 		$element.innerHTML = '';
 
